@@ -1,13 +1,29 @@
 
 public class SAP {
     
-    Digraph G;
+    private Digraph G;
     
-    BreadthFirstDirectedPaths bfdp;
+    private int lastAncestorCall = -1;
+    private int lastVCall = -1;
+    private int lastWCall = -1;
+    
+    private int lastAncestorCallArr = -1;
+    private Iterable<Integer> lastVCallArr = null;
+    private Iterable<Integer> lastWCallArr = null;
     
     // constructor takes a digraph (not necessarily a DAG)
     public SAP(Digraph G) {
-        this.G = G;
+        if (G == null) {
+            throw new java.lang.NullPointerException();
+        }
+        
+        this.G = new Digraph(G.V());
+        for (int v = 0; v < G.V(); v++) {
+            for (int w : G.adj(v)) {
+                this.G.addEdge(v, w);
+            }
+        }
+
 
     }
     
@@ -15,7 +31,11 @@ public class SAP {
     public int length(int v, int w) {
         
         BreadthFirstDirectedPaths bfpV = new BreadthFirstDirectedPaths(G, v);
-        BreadthFirstDirectedPaths bfpW = new BreadthFirstDirectedPaths(G, w);        
+        BreadthFirstDirectedPaths bfpW = new BreadthFirstDirectedPaths(G, w);
+        
+        if (v == lastVCall && w == lastWCall) {
+            return lastAncestorCall;
+        }
         
         int i = ancestor(v, w);
         
@@ -47,6 +67,12 @@ public class SAP {
                 ancestor = i;
             }
         }
+        
+        if (ancestor != -1 && bfpV.hasPathTo(ancestor) && bfpW.hasPathTo(ancestor)) {
+            lastAncestorCall = bfpV.distTo(ancestor) + bfpW.distTo(ancestor);
+            lastVCall = v;
+            lastWCall = w;
+        }
 
         
         return ancestor;
@@ -54,6 +80,14 @@ public class SAP {
     
     // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null) {
+            throw new java.lang.NullPointerException();
+        }
+        
+        if (v == lastVCallArr && w == lastWCallArr) {
+            return lastAncestorCallArr;
+        }
+        
         BreadthFirstDirectedPaths bfpV = new BreadthFirstDirectedPaths(G, v);
         BreadthFirstDirectedPaths bfpW = new BreadthFirstDirectedPaths(G, w);        
         
@@ -69,6 +103,10 @@ public class SAP {
     
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null) {
+            throw new java.lang.NullPointerException();
+        }
+        
         BreadthFirstDirectedPaths bfpV = new BreadthFirstDirectedPaths(G, v);
         BreadthFirstDirectedPaths bfpW = new BreadthFirstDirectedPaths(G, w);
         
@@ -86,8 +124,13 @@ public class SAP {
                 ancestor = i;
             }
         }
-
         
+        if (ancestor != -1 && bfpV.hasPathTo(ancestor) && bfpW.hasPathTo(ancestor)) {
+            lastAncestorCallArr = bfpV.distTo(ancestor) + bfpW.distTo(ancestor);
+            lastVCallArr = v;
+            lastWCallArr = w;
+        }        
+
         return ancestor;
     }
     
